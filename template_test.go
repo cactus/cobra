@@ -32,9 +32,8 @@ var cmdPrint = &Command{
 	Use:   "print [string to print]",
 	Short: "Print anything to the screen",
 	Long:  `an absolutely utterly useless command for testing.`,
-	Run: func(cmd *Command, args []string) error {
+	Run: func(cmd *Command, args []string) {
 		tp = args
-		return nil
 	},
 }
 
@@ -44,17 +43,14 @@ var cmdEcho = &Command{
 	Short:   "Echo anything to the screen",
 	Long:    `an utterly useless command for testing.`,
 	Example: "Just run cobra-test echo",
-	PersistentPreRun: func(cmd *Command, args []string) error {
+	PersistentPreRun: func(cmd *Command, args []string) {
 		echoPersPre = args
-		return nil
 	},
-	PreRun: func(cmd *Command, args []string) error {
+	PreRun: func(cmd *Command, args []string) {
 		echoPre = args
-		return nil
 	},
-	Run: func(cmd *Command, args []string) error {
+	Run: func(cmd *Command, args []string) {
 		te = args
-		return nil
 	},
 }
 
@@ -62,8 +58,7 @@ var cmdEchoSub = &Command{
 	Use:   "echosub [string to print]",
 	Short: "second sub command for echo",
 	Long:  `an absolutely utterly useless command for testing gendocs!.`,
-	Run: func(cmd *Command, args []string) error {
-		return nil
+	Run: func(cmd *Command, args []string) {
 	},
 }
 
@@ -71,13 +66,11 @@ var cmdTimes = &Command{
 	Use:   "times [# times] [string to echo]",
 	Short: "Echo anything to the screen more times",
 	Long:  `a slightly useless command for testing.`,
-	PersistentPreRun: func(cmd *Command, args []string) error {
+	PersistentPreRun: func(cmd *Command, args []string) {
 		timesPersPre = args
-		return nil
 	},
-	Run: func(cmd *Command, args []string) error {
+	Run: func(cmd *Command, args []string) {
 		tt = args
-		return nil
 	},
 }
 
@@ -85,9 +78,8 @@ var cmdRootNoRun = &Command{
 	Use:   "cobra-test",
 	Short: "The root can run it's own function",
 	Long:  "The root description for help",
-	PersistentPreRun: func(cmd *Command, args []string) error {
+	PersistentPreRun: func(cmd *Command, args []string) {
 		rootPersPre = args
-		return nil
 	},
 }
 
@@ -101,10 +93,9 @@ var cmdRootWithRun = &Command{
 	Use:   "cobra-test",
 	Short: "The root can run it's own function",
 	Long:  "The root description for help",
-	Run: func(cmd *Command, args []string) error {
+	Run: func(cmd *Command, args []string) {
 		tr = args
 		rootcalled = true
-		return nil
 	},
 }
 
@@ -118,9 +109,8 @@ var cmdVersion1 = &Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Long:  `First version of the version command`,
-	Run: func(cmd *Command, args []string) error {
+	Run: func(cmd *Command, args []string) {
 		versionUsed = 1
-		return nil
 	},
 }
 
@@ -128,9 +118,8 @@ var cmdVersion2 = &Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Long:  `Second version of the version command`,
-	Run: func(cmd *Command, args []string) error {
+	Run: func(cmd *Command, args []string) {
 		versionUsed = 2
-		return nil
 	},
 }
 
@@ -509,17 +498,15 @@ func TestSubcommandArgEvaluation(t *testing.T) {
 
 	first := &Command{
 		Use: "first",
-		Run: func(cmd *Command, args []string) error {
-			return nil
+		Run: func(cmd *Command, args []string) {
 		},
 	}
 	cmd.AddCommand(first)
 
 	second := &Command{
 		Use: "second",
-		Run: func(cmd *Command, args []string) error {
+		Run: func(cmd *Command, args []string) {
 			fmt.Fprintf(cmd.Out(), "%v", args)
-			return nil
 		},
 	}
 	first.AddCommand(second)

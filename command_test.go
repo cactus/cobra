@@ -68,9 +68,8 @@ func TestStripFlags(t *testing.T) {
 		Use:   "print [string to print]",
 		Short: "Print anything to the screen",
 		Long:  `an utterly useless command for testing.`,
-		Run: func(cmd *Command, args []string) error {
+		Run: func(cmd *Command, args []string) {
 			tp = args
-			return nil
 		},
 	}
 

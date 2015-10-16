@@ -53,15 +53,15 @@ type Command struct {
 	//   * PersistentPostRun()
 	// All functions get the same args, the arguments after the command name
 	// PersistentPreRun: children of this command will inherit and execute
-	PersistentPreRun func(cmd *Command, args []string) error
+	PersistentPreRun func(cmd *Command, args []string)
 	// PreRun: children of this command will not inherit.
-	PreRun func(cmd *Command, args []string) error
+	PreRun func(cmd *Command, args []string)
 	// Run: Typically the actual work function. Most commands will only implement this
-	Run func(cmd *Command, args []string) error
+	Run func(cmd *Command, args []string)
 	// PostRun: run after the Run command.
-	PostRun func(cmd *Command, args []string) error
+	PostRun func(cmd *Command, args []string)
 	// PersistentPostRun: children of this command will inherit and execute after PostRun
-	PersistentPostRun func(cmd *Command, args []string) error
+	PersistentPostRun func(cmd *Command, args []string)
 
 	// Full set of flags
 	flags *flag.FlagSet
@@ -426,33 +426,23 @@ func (c *Command) execute(a []string) (err error) {
 
 	for p := c; p != nil; p = p.Parent() {
 		if p.PersistentPreRun != nil {
-			if err := p.PersistentPreRun(c, argWoFlags); err != nil {
-				return err
-			}
+			p.PersistentPreRun(c, argWoFlags)
 			break
 		}
 	}
 	if c.PreRun != nil {
-		if err := c.PreRun(c, argWoFlags); err != nil {
-			return err
-		}
+		c.PreRun(c, argWoFlags)
 	}
 
 	if c.Run != nil {
-		if err := c.Run(c, argWoFlags); err != nil {
-			return err
-		}
+		c.Run(c, argWoFlags)
 	}
 	if c.PostRun != nil {
-		if err := c.PostRun(c, argWoFlags); err != nil {
-			return err
-		}
+		c.PostRun(c, argWoFlags)
 	}
 	for p := c; p != nil; p = p.Parent() {
 		if p.PersistentPostRun != nil {
-			if err := p.PersistentPostRun(c, argWoFlags); err != nil {
-				return err
-			}
+			p.PersistentPostRun(c, argWoFlags)
 			break
 		}
 	}
@@ -535,10 +525,10 @@ func (c *Command) initHelpCmd() {
 			Short: "Help about any command",
 			Long: `Help provides help for any command in the application.
     Simply type ` + c.Name() + ` help [path to command] for full details.`,
-			PersistentPreRun:  func(cmd *Command, args []string) error { return nil },
-			PersistentPostRun: func(cmd *Command, args []string) error { return nil },
+			PersistentPreRun:  func(cmd *Command, args []string) {},
+			PersistentPostRun: func(cmd *Command, args []string) {},
 
-			Run: func(c *Command, args []string) error {
+			Run: func(c *Command, args []string) {
 				cmd, _, e := c.Root().Find(args)
 				if cmd == nil || e != nil {
 					c.Printf("Unknown help topic %#q.", args)
@@ -547,7 +537,6 @@ func (c *Command) initHelpCmd() {
 					helpFunc := cmd.HelpFunc()
 					helpFunc(cmd, args)
 				}
-				return nil
 			},
 		}
 	}

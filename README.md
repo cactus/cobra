@@ -49,7 +49,7 @@ A Command has the following structure:
         Use string // The one-line usage message.
         Short string // The short description shown in the 'help' output.
         Long string // The long message shown in the 'help <this-command>' output.
-        Run func(cmd *Command, args []string) // Run runs the command.
+        Run func(cmd *Command, args []string) error // Run runs the command.
     }
 
 ### Flags
@@ -95,8 +95,9 @@ Cobra doesn't require any special constructors. Simply create your commands.
         Long: `A Fast and Flexible Static Site Generator built with
                 love by spf13 and friends in Go.
                 Complete documentation is available at http://hugo.spf13.com`,
-        Run: func(cmd *cobra.Command, args []string) {
+        Run: func(cmd *cobra.Command, args []string) error {
             // Do Stuff Here
+            return nil
         },
     }
 
@@ -108,8 +109,9 @@ Additional commands can be defined.
         Use:   "version",
         Short: "Print the version number of Hugo",
         Long:  `All software has versions. This is Hugo's`,
-        Run: func(cmd *cobra.Command, args []string) {
+        Run: func(cmd *cobra.Command, args []string) error {
             fmt.Println("Hugo Static Site Generator v0.9 -- HEAD")
+            return nil
         },
     }
 
@@ -142,15 +144,6 @@ global flags assign a flag as a persistent flag on the root.
 A flag can also be assigned locally which will only apply to that specific command.
 
 	HugoCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read from")
-
-### Remove a command from its parent
-
-Removing a command is not a common action in simple programs but it allows 3rd parties to customize an existing command tree.
-
-In this example, we remove the existing `VersionCmd` command of an existing root command, and we replace it by our own version.
-
-	mainlib.RootCmd.RemoveCommand(mainlib.VersionCmd)
-	mainlib.RootCmd.AddCommand(versionCmd)
 
 ### Once all commands and flags are defined, Execute the commands
 
@@ -185,8 +178,9 @@ More documentation about flags is available at https://github.com/spf13/pflag
             Long:  `print is for printing anything back to the screen.
             For many years people have printed back to the screen.
             `,
-            Run: func(cmd *cobra.Command, args []string) {
+            Run: func(cmd *cobra.Command, args []string) error {
                 fmt.Println("Print: " + strings.Join(args, " "))
+                return nil
             },
         }
 
@@ -196,8 +190,9 @@ More documentation about flags is available at https://github.com/spf13/pflag
             Long:  `echo is for echoing anything back.
             Echo works a lot like print, except it has a child command.
             `,
-            Run: func(cmd *cobra.Command, args []string) {
+            Run: func(cmd *cobra.Command, args []string) error {
                 fmt.Println("Print: " + strings.Join(args, " "))
+                return nil
             },
         }
 
@@ -206,10 +201,11 @@ More documentation about flags is available at https://github.com/spf13/pflag
             Short: "Echo anything to the screen more times",
             Long:  `echo things multiple times back to the user by providing
             a count and a string.`,
-            Run: func(cmd *cobra.Command, args []string) {
+            Run: func(cmd *cobra.Command, args []string) error {
                 for i:=0; i < echoTimes; i++ {
                     fmt.Println("Echo: " + strings.Join(args, " "))
                 }
+                return nil
             },
         }
 
@@ -374,37 +370,46 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use:   "root [sub]",
 		Short: "My root command",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside rootCmd PersistentPreRun with args: %v\n", args)
+            return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside rootCmd PreRun with args: %v\n", args)
+            return nil
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside rootCmd Run with args: %v\n", args)
+            return nil
 		},
-		PostRun: func(cmd *cobra.Command, args []string) {
+		PostRun: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside rootCmd PostRun with args: %v\n", args)
+            return nil
 		},
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		PersistentPostRun: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside rootCmd PersistentPostRun with args: %v\n", args)
+            return nil
 		},
 	}
 
 	var subCmd = &cobra.Command{
 		Use:   "sub [no options!]",
 		Short: "My sub command",
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside subCmd PreRun with args: %v\n", args)
+            return nil
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside subCmd Run with args: %v\n", args)
+            return nil
 		},
-		PostRun: func(cmd *cobra.Command, args []string) {
+		PostRun: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside subCmd PostRun with args: %v\n", args)
+            return nil
 		},
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		PersistentPostRun: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Inside subCmd PersistentPostRun with args: %v\n", args)
+            return nil
 		},
 	}
 
@@ -417,54 +422,6 @@ func main() {
 	_ = rootCmd.Execute()
 }
 ```
-
-## Suggestions when "unknown command" happens
-
-Cobra will print automatic suggestions when "unknown command" errors happen. This allows Cobra to behavior similarly to the `git` command when a typo happens. For example:
-
-```
-$ hugo srever
-unknown command "srever" for "hugo"
-
-Did you mean this?
-  server
-
-Run 'hugo --help' for usage.
-```
-
-Suggestions are automatic based on every subcommand registered and use an implementation of Levenshtein distance. Every registered command that matches a minimum distance of 2 (ignoring case) will be displayed as a suggestion.
-
-If you need to disable suggestions or tweak the string distance in your command, use:
-
-    command.DisableSuggestions = true
-
-or 
-
-    command.SuggestionsMinimumDistance = 1
-
-You can also explicitly set names for which a given command will be suggested using the `SuggestFor` attribute. This allows suggestions for strings that are not close in terms of string distance, but makes sense in your set of commands and for some which you don't want aliases. Example:
-
-```
-$ hugo delete
-unknown command "delete" for "hugo"
-
-Did you mean this?
-  remove
-
-Run 'hugo --help' for usage.
-```
-
-## Generating markdown formatted documentation for your command
-
-Cobra can generate a markdown formatted document based on the subcommands, flags, etc. A simple example of how to do this for your command can be found in [Markdown Docs](md_docs.md)
-
-## Generating man pages for your command
-
-Cobra can generate a man page based on the subcommands, flags, etc. A simple example of how to do this for your command can be found in [Man Docs](man_docs.md)
-
-## Generating bash completions for your command
-
-Cobra can generate a bash completions file. If you add more information to your command these completions can be amazingly powerful and flexible.  Read more about [Bash Completions](bash_completions.md)
 
 ## Debugging
 

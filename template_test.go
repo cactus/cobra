@@ -3,7 +3,6 @@ package cobra
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"reflect"
 	"runtime"
 	"strings"
@@ -13,37 +12,29 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var _ = fmt.Println
-var _ = os.Stderr
+var (
+	tp, te, tt, t1, tr                              []string
+	rootPersPre, echoPre, echoPersPre, timesPersPre []string
+	flagb1, flagb2, flagb3, flagbr, flagbp          bool
+	flags1, flags2a, flags2b, flags3, outs          string
+	flagi1, flagi2, flagi3, flagir                  int
+	globalFlag1                                     bool
+	flagEcho, rootcalled                            bool
+	versionUsed                                     int
+)
 
-var tp, te, tt, t1, tr []string
-var rootPersPre, echoPre, echoPersPre, timesPersPre []string
-var flagb1, flagb2, flagb3, flagbr, flagbp bool
-var flags1, flags2a, flags2b, flags3, outs string
-var flagi1, flagi2, flagi3, flagir int
-var globalFlag1 bool
-var flagEcho, rootcalled bool
-var versionUsed int
-
-const strtwoParentHelp = "help message for parent flag strtwo"
-const strtwoChildHelp = "help message for child flag strtwo"
-
-var cmdHidden = &Command{
-	Use:   "hide [secret string to print]",
-	Short: "Print anything to screen (if command is known)",
-	Long:  `an absolutely utterly useless command for testing.`,
-	Run: func(cmd *Command, args []string) {
-		outs = "hidden"
-	},
-	Hidden: true,
-}
+const (
+	strtwoParentHelp = "help message for parent flag strtwo"
+	strtwoChildHelp  = "help message for child flag strtwo"
+)
 
 var cmdPrint = &Command{
 	Use:   "print [string to print]",
 	Short: "Print anything to the screen",
 	Long:  `an absolutely utterly useless command for testing.`,
-	Run: func(cmd *Command, args []string) {
+	Run: func(cmd *Command, args []string) error {
 		tp = args
+		return nil
 	},
 }
 
@@ -53,14 +44,17 @@ var cmdEcho = &Command{
 	Short:   "Echo anything to the screen",
 	Long:    `an utterly useless command for testing.`,
 	Example: "Just run cobra-test echo",
-	PersistentPreRun: func(cmd *Command, args []string) {
+	PersistentPreRun: func(cmd *Command, args []string) error {
 		echoPersPre = args
+		return nil
 	},
-	PreRun: func(cmd *Command, args []string) {
+	PreRun: func(cmd *Command, args []string) error {
 		echoPre = args
+		return nil
 	},
-	Run: func(cmd *Command, args []string) {
+	Run: func(cmd *Command, args []string) error {
 		te = args
+		return nil
 	},
 }
 
@@ -68,29 +62,22 @@ var cmdEchoSub = &Command{
 	Use:   "echosub [string to print]",
 	Short: "second sub command for echo",
 	Long:  `an absolutely utterly useless command for testing gendocs!.`,
-	Run: func(cmd *Command, args []string) {
-	},
-}
-
-var cmdDeprecated = &Command{
-	Use:        "deprecated [can't do anything here]",
-	Short:      "A command which is deprecated",
-	Long:       `an absolutely utterly useless command for testing deprecation!.`,
-	Deprecated: "Please use echo instead",
-	Run: func(cmd *Command, args []string) {
+	Run: func(cmd *Command, args []string) error {
+		return nil
 	},
 }
 
 var cmdTimes = &Command{
-	Use:        "times [# times] [string to echo]",
-	SuggestFor: []string{"counts"},
-	Short:      "Echo anything to the screen more times",
-	Long:       `a slightly useless command for testing.`,
-	PersistentPreRun: func(cmd *Command, args []string) {
+	Use:   "times [# times] [string to echo]",
+	Short: "Echo anything to the screen more times",
+	Long:  `a slightly useless command for testing.`,
+	PersistentPreRun: func(cmd *Command, args []string) error {
 		timesPersPre = args
+		return nil
 	},
-	Run: func(cmd *Command, args []string) {
+	Run: func(cmd *Command, args []string) error {
 		tt = args
+		return nil
 	},
 }
 
@@ -98,8 +85,9 @@ var cmdRootNoRun = &Command{
 	Use:   "cobra-test",
 	Short: "The root can run it's own function",
 	Long:  "The root description for help",
-	PersistentPreRun: func(cmd *Command, args []string) {
+	PersistentPreRun: func(cmd *Command, args []string) error {
 		rootPersPre = args
+		return nil
 	},
 }
 
@@ -113,9 +101,10 @@ var cmdRootWithRun = &Command{
 	Use:   "cobra-test",
 	Short: "The root can run it's own function",
 	Long:  "The root description for help",
-	Run: func(cmd *Command, args []string) {
+	Run: func(cmd *Command, args []string) error {
 		tr = args
 		rootcalled = true
+		return nil
 	},
 }
 
@@ -129,8 +118,9 @@ var cmdVersion1 = &Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Long:  `First version of the version command`,
-	Run: func(cmd *Command, args []string) {
+	Run: func(cmd *Command, args []string) error {
 		versionUsed = 1
+		return nil
 	},
 }
 
@@ -138,8 +128,9 @@ var cmdVersion2 = &Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Long:  `Second version of the version command`,
-	Run: func(cmd *Command, args []string) {
+	Run: func(cmd *Command, args []string) error {
 		versionUsed = 2
+		return nil
 	},
 }
 
@@ -246,7 +237,7 @@ func fullTester(c *Command, input string) resulter {
 	// Testing flag with invalid input
 	c.SetOutput(buf)
 	cmdEcho.AddCommand(cmdTimes)
-	c.AddCommand(cmdPrint, cmdEcho, cmdSubNoRun, cmdDeprecated)
+	c.AddCommand(cmdPrint, cmdEcho, cmdSubNoRun)
 	c.SetArgs(strings.Split(input, " "))
 
 	err := c.Execute()
@@ -336,49 +327,6 @@ func TestCommandAlias(t *testing.T) {
 	if strings.Join(tt, " ") != "one two" {
 		t.Error("Command didn't parse correctly")
 	}
-}
-
-func TestPrefixMatching(t *testing.T) {
-	EnablePrefixMatching = true
-	noRRSetupTest("ech times one two")
-
-	if te != nil || tp != nil {
-		t.Error("Wrong command called")
-	}
-	if tt == nil {
-		t.Error("Wrong command called")
-	}
-	if strings.Join(tt, " ") != "one two" {
-		t.Error("Command didn't parse correctly")
-	}
-
-	EnablePrefixMatching = false
-}
-
-func TestNoPrefixMatching(t *testing.T) {
-	EnablePrefixMatching = false
-
-	noRRSetupTest("ech times one two")
-
-	if !(tt == nil && te == nil && tp == nil) {
-		t.Error("Wrong command called")
-	}
-}
-
-func TestAliasPrefixMatching(t *testing.T) {
-	EnablePrefixMatching = true
-	noRRSetupTest("sa times one two")
-
-	if te != nil || tp != nil {
-		t.Error("Wrong command called")
-	}
-	if tt == nil {
-		t.Error("Wrong command called")
-	}
-	if strings.Join(tt, " ") != "one two" {
-		t.Error("Command didn't parse correctly")
-	}
-	EnablePrefixMatching = false
 }
 
 func TestChildSameName(t *testing.T) {
@@ -561,15 +509,17 @@ func TestSubcommandArgEvaluation(t *testing.T) {
 
 	first := &Command{
 		Use: "first",
-		Run: func(cmd *Command, args []string) {
+		Run: func(cmd *Command, args []string) error {
+			return nil
 		},
 	}
 	cmd.AddCommand(first)
 
 	second := &Command{
 		Use: "second",
-		Run: func(cmd *Command, args []string) {
+		Run: func(cmd *Command, args []string) error {
 			fmt.Fprintf(cmd.Out(), "%v", args)
+			return nil
 		},
 	}
 	first.AddCommand(second)
@@ -809,45 +759,6 @@ func TestRootUnknownCommand(t *testing.T) {
 	}
 }
 
-func TestRootSuggestions(t *testing.T) {
-	outputWithSuggestions := "Error: unknown command \"%s\" for \"cobra-test\"\n\nDid you mean this?\n\t%s\n\nRun 'cobra-test --help' for usage.\n"
-	outputWithoutSuggestions := "Error: unknown command \"%s\" for \"cobra-test\"\nRun 'cobra-test --help' for usage.\n"
-
-	cmd := initializeWithRootCmd()
-	cmd.AddCommand(cmdTimes)
-
-	tests := map[string]string{
-		"time":     "times",
-		"tiems":    "times",
-		"tims":     "times",
-		"timeS":    "times",
-		"rimes":    "times",
-		"ti":       "times",
-		"t":        "times",
-		"timely":   "times",
-		"ri":       "",
-		"timezone": "",
-		"foo":      "",
-		"counts":   "times",
-	}
-
-	for typo, suggestion := range tests {
-		for _, suggestionsDisabled := range []bool{false, true} {
-			cmd.DisableSuggestions = suggestionsDisabled
-			result := simpleTester(cmd, typo)
-			expected := ""
-			if len(suggestion) == 0 || suggestionsDisabled {
-				expected = fmt.Sprintf(outputWithoutSuggestions, typo)
-			} else {
-				expected = fmt.Sprintf(outputWithSuggestions, typo, suggestion)
-			}
-			if result.Output != expected {
-				t.Errorf("Unexpected response.\nExpecting to be:\n %q\nGot:\n %q\n", expected, result.Output)
-			}
-		}
-	}
-}
-
 func TestFlagsBeforeCommand(t *testing.T) {
 	// short without space
 	x := fullSetupTest("-i10 echo")
@@ -902,18 +813,6 @@ func TestFlagsBeforeCommand(t *testing.T) {
 
 }
 
-func TestRemoveCommand(t *testing.T) {
-	versionUsed = 0
-	c := initializeWithRootCmd()
-	c.AddCommand(cmdVersion1)
-	c.RemoveCommand(cmdVersion1)
-	x := fullTester(c, "version")
-	if x.Error == nil {
-		t.Errorf("Removed command should not have been called\n")
-		return
-	}
-}
-
 func TestCommandWithoutSubcommands(t *testing.T) {
 	c := initializeWithRootCmd()
 
@@ -937,31 +836,6 @@ func TestCommandWithoutSubcommandsWithArg(t *testing.T) {
 		t.Errorf("Calling command without subcommands but with arg has wrong args: expected: %v, actual: %v", expectedArgs, tr)
 		return
 	}
-}
-
-func TestReplaceCommandWithRemove(t *testing.T) {
-	versionUsed = 0
-	c := initializeWithRootCmd()
-	c.AddCommand(cmdVersion1)
-	c.RemoveCommand(cmdVersion1)
-	c.AddCommand(cmdVersion2)
-	x := fullTester(c, "version")
-	if x.Error != nil {
-		t.Errorf("Valid Input shouldn't have errors, got:\n %q", x.Error)
-		return
-	}
-	if versionUsed == 1 {
-		t.Errorf("Removed command shouldn't be called\n")
-	}
-	if versionUsed != 2 {
-		t.Errorf("Replacing command should have been called but didn't\n")
-	}
-}
-
-func TestDeprecatedSub(t *testing.T) {
-	c := fullSetupTest("deprecated")
-
-	checkResultContains(t, c, cmdDeprecated.Deprecated)
 }
 
 func TestPreRun(t *testing.T) {

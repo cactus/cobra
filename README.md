@@ -2,7 +2,8 @@
 
 A Commander for modern go CLI interactions
 
-This is a fork. See [upstream](https://github.com/spf13/cobra) for more info.
+This is a fork with lots of functionality removed. Probably not what you are looking for.  
+See [upstream](https://github.com/spf13/cobra) for more info.
 
 ## License
 
